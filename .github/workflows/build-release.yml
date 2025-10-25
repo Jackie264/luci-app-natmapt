@@ -78,8 +78,8 @@ jobs:
 
           sed -i '/^PKG_VERSION/d' "$MF"
           sed -i '/^PKG_RELEASE/d' "$MF"
-          sed -i "/^PKG_NAME/a PKG_RELEASE:=${PKG_RELEASE}" "$MF"
-          sed -i "/^PKG_NAME/a PKG_VERSION:=${PKG_VERSION}" "$MF"
+          sed -i "/^LUCI_NAME/a PKG_RELEASE:=${PKG_RELEASE}" "$MF"
+          sed -i "/^LUCI_NAME/a PKG_VERSION:=${PKG_VERSION}" "$MF"
 
           echo "Patched Makefile:"
           grep -E 'PKG_VERSION|PKG_RELEASE' "$MF"
