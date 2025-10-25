@@ -114,12 +114,12 @@ jobs:
         with:
           path: ./release-assets
 
-      - name: Normalize IPK filenames
-        id: rename
-        uses: Jackie264/actions-repo/rename-ipk@latest
-        with:
-          target_dir: ./release-assets
-          mode: strip
+#      - name: Normalize IPK filenames
+#        id: rename
+#        uses: Jackie264/actions-repo/rename-ipk@latest
+#        with:
+#          target_dir: ./release-assets
+#          mode: strip
 
       - name: Parse IPK filename
         id: version
