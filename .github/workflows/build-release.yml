@@ -109,25 +109,30 @@ jobs:
       - name: 🧾 Checkout repo
         uses: actions/checkout@v5
 
-      - name: 🔍 Extract version and release from Makefile
-        id: version
-        run: |
-          PKG_VERSION=$(grep -E '^PKG_VERSION *:?=' Makefile | head -n1 | cut -d= -f2 | tr -d '[:space:]')
-          PKG_RELEASE=$(grep -E '^PKG_RELEASE *:?=' Makefile | head -n1 | cut -d= -f2 | tr -d '[:space:]')
-          COMBINED_VERSION="${PKG_VERSION}-${PKG_RELEASE}"
-          echo "📦 Version: $COMBINED_VERSION"
-          echo "version=$COMBINED_VERSION" >> "$GITHUB_OUTPUT"
-
       - name: ⬇️ Download all build artifacts
         uses: actions/download-artifact@v5
         with:
           path: ./release-assets
 
+      - name: Normalize IPK filenames
+        id: rename
+        uses: Jackie264/actions-repo/rename-ipk@latest
+        with:
+          target_dir: ./release-assets
+          mode: strip
+
+      - name: Parse IPK filename
+        id: version
+        uses: Jackie264/actions-repo/parse-ipk-file@latest
+        with:
+          file: ./release-assets/*.ipk
+          output_dir: ./parsed-meta
+
       - name: 🗃️ Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          name: Build-${{ steps.version.outputs.version }}
+          tag_name: v${{ steps.version.outputs.ver }}
+          name: Build-v${{ steps.version.outputs.ver }}
           files: |
             ./release-assets/**/*.ipk
           draft: false
