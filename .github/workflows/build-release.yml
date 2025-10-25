@@ -23,6 +23,8 @@ jobs:
           - version: openwrt-24.10
             target: x86_64
             suffix: all
+    outputs:
+      version: ${{ steps.patch_version.outputs.version }}
 
     steps:
       - name: 🧾 Checkout repo
@@ -62,6 +64,25 @@ jobs:
               rm -rf "${DEV_DIR}/devices" "${DEV_DIR}/devices.disabled"
             fi
           fi
+
+      - name: 🩹 Patch Makefile with dynamic version
+        id: patch_version
+        run: |
+          set -euo pipefail
+          PKG_VERSION=$(date -u +'%y.%j')
+          PKG_RELEASE=$(date -u +'%s' | cut -c6-10)
+
+          echo "Using version: ${PKG_VERSION}-${PKG_RELEASE}"
+
+          MF="feed/luci/applications/${PKG_NAME}/Makefile"
+
+          sed -i '/^PKG_VERSION/d' "$MF"
+          sed -i '/^PKG_RELEASE/d' "$MF"
+          sed -i "/^PKG_NAME/a PKG_VERSION:=${PKG_VERSION}\nPKG_RELEASE:=${PKG_RELEASE}" "$MF"
+
+          echo "Patched Makefile:"
+          grep -E 'PKG_VERSION|PKG_RELEASE' "$MF"
+          echo "version=${PKG_VERSION}" >> $GITHUB_OUTPUT
           
       - name: 🧮 Compute ARCH
         run: |
@@ -114,25 +135,11 @@ jobs:
         with:
           path: ./release-assets
 
-#      - name: Normalize IPK filenames
-#        id: rename
-#        uses: Jackie264/actions-repo/rename-ipk@latest
-#        with:
-#          target_dir: ./release-assets
-#          mode: strip
-
-      - name: Parse IPK filename
-        id: version
-        uses: Jackie264/actions-repo/parse-ipk-file@latest
-        with:
-          file: ./release-assets/*.ipk
-          output_dir: ./parsed-meta
-
       - name: 🗃️ Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ steps.version.outputs.ver }}
-          name: Build-v${{ steps.version.outputs.ver }}
+          tag_name: ${{ needs.build.outputs.version }}
+          name: Build-v${{ needs.build.outputs.version }}
           files: |
             ./release-assets/**/*.ipk
           draft: false
@@ -164,5 +171,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add luci/
-          git commit -m "Update to - ${{ steps.version.outputs.ver }}" || echo "No changes"
+          git commit -m "Update to - ${{ needs.build.outputs.version }}" || echo "No changes"
           git push
