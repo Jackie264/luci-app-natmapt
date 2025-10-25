@@ -53,17 +53,6 @@ jobs:
             --exclude='feed' \
             --exclude='.github' \
             ./ feed/luci/applications/${PKG_NAME}/
-            
-      - name: 🧹 Consolidate devices JSON & prune folders
-        run: |
-          set -euo pipefail
-          DEV_DIR="feed/luci/applications/${PKG_NAME}/root/usr/share/advanced-reboot"
-          if [ -d "${DEV_DIR}/devices" ]; then
-            ( cd "${DEV_DIR}/devices" && jq -s '.' *.json > "../devices.json" )
-            if [ -s "${DEV_DIR}/devices.json" ]; then
-              rm -rf "${DEV_DIR}/devices" "${DEV_DIR}/devices.disabled"
-            fi
-          fi
 
       - name: 🩹 Patch Makefile with dynamic version
         id: patch_version
@@ -99,7 +88,6 @@ jobs:
           FEED_DIR: ${{ github.workspace }}/feed
           NO_SHFMT_CHECK: 1
           NO_REFRESH_CHECK: 1
-          SOURCE_DATE_EPOCH: ""
           
       - name: 🔍 Debug build output
         run: |
